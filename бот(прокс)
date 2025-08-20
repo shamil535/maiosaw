@@ -1,0 +1,42 @@
+//бот с прокси 
+function createBot(botId = 'main', credentials = null) {
+    // дданные прокси
+    const proxyHost = '147.45.120.251';
+    const proxyPort = 9193;
+    const proxyUser = 'feqc5f';
+    const proxyPass = 'V0Frjj';
+
+    
+    const proxyUrl = `socks5://${proxyUser}:${proxyPass}@${proxyHost}:${proxyPort}`;
+    const agent = new SocksProxyAgent(proxyUrl);
+
+
+    const botConfig = credentials || {
+        host: config.minecraft.host,
+        username: config.minecraft.username,
+        auth: config.minecraft.auth
+    };
+
+    const bot = mineflayer.createBot({
+        ...botConfig,
+        agent
+    });
+
+    bot.loadPlugin(pathfinder);
+
+  
+    botStates[botId] = {
+        isHarvesting: false,
+        isAutoEating: false,
+        isClicking: false,
+        isSolvingCaptcha: false,
+        canPlantNetherWart: false
+    };
+
+   
+    bots[botId] = bot;
+
+    setupBotEventHandlers(bot, botId);
+
+    return bot;
+}
