@@ -1,0 +1,61 @@
+async function handleClickCommand(context, clickData) {
+    if (!bot) {
+        await context.send('❌ Бот не подключён');
+        return;
+    }
+
+    try {
+        const [slotStr, button] = clickData.split(' ');
+        const slot = parseInt(slotStr);
+        const mouseButton = button || 'left';
+
+        if (isNaN(slot) || slot < 0 || slot > 35) {
+            await context.send('❌ Неверный слот. Используйте: клик <слот> [left/right]');
+            return;
+        }
+
+        console.log(`Кликаю по слоту ${slot} кнопкой ${mouseButton}`);
+        
+        if (mouseButton === 'left') {
+            await bot.clickWindow(slot, 0, 0);
+        } else if (mouseButton === 'right') {
+            await bot.clickWindow(slot, 1, 0);
+        } else {
+            await context.send('❌ Неверная кнопка мыши. Используйте left или right');
+            return;
+        }
+
+        await context.send(`✅ Клик по слоту ${slot} кнопкой ${mouseButton} выполнен`);
+    } catch (error) {
+        console.log('Ошибка при клике по инвентарю:', error.message);
+        await context.send('❌ Ошибка при клике по инвентарю');
+    }
+}
+
+async function handleMoveItemCommand(context, moveData) {
+    if (!bot) {
+        await context.send('❌ Бот не подключён');
+        return;
+    }
+
+    try {
+        const [fromSlotStr, toSlotStr] = moveData.split(' ');
+        const fromSlot = parseInt(fromSlotStr);
+        const toSlot = parseInt(toSlotStr);
+
+        if (isNaN(fromSlot) || isNaN(toSlot) || fromSlot < 0 || fromSlot > 35 || toSlot < 0 || toSlot > 35) {
+            await context.send('❌ Неверные слоты. Используйте: переместить <из_слота> <в_слот>');
+            return;
+        }
+
+        console.log(`Перемещаю предмет из слота ${fromSlot} в слот ${toSlot}`);
+        
+  
+        await bot.moveSlotItem(fromSlot, toSlot);
+        
+        await context.send(`✅ Предмет перемещён из слота ${fromSlot} в слот ${toSlot}`);
+    } catch (error) {
+        console.log('Ошибка при перемещении предмета:', error.message);
+        await context.send('❌ Ошибка при перемещении предмета');
+    }
+}
