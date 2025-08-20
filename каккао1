@@ -1,0 +1,86 @@
+//какао 1
+async function improvedPlantCocoa(bot, x, y, z) {
+    try {
+      
+        const beans = bot.inventory.items().find(item => item.name === 'cocoa_beans');
+        if (!beans) {
+            console.log('Нет бобов какао для посадки');
+            return false;
+        }
+
+       
+        const log = bot.blockAt(new Vec3(x, y, z));
+        const validLogs = ['jungle_wood', 'jungle_log', 'stripped_jungle_log', 'stripped_jungle_wood', 'log'];
+        
+        if (!log || !validLogs.includes(log.name)) {
+            console.log(`Нет подходящего блока дерева для посадки какао: ${log ? log.name : 'пусто'}`);
+            return false;
+        }
+
+    
+        const existingCocoa = bot.blockAt(new Vec3(x + 1, y, z));
+        if (existingCocoa && existingCocoa.name === 'cocoa') {
+            console.log('На этом месте уже есть какао, пропускаем посадку');
+            return false;
+        }
+
+
+        const held = bot.heldItem;
+        
+   
+        let equipSuccess = false;
+        for (let attempt = 1; attempt <= 3; attempt++) {
+            try {
+                await bot.equip(beans, 'hand');
+                await new Promise(resolve => setTimeout(resolve, 200));
+                
+                if (bot.heldItem && bot.heldItem.name === 'cocoa_beans') {
+                    console.log(`Бобы какао успешно экипированы с попытки ${attempt}`);
+                    equipSuccess = true;
+                    break;
+            } else {
+                    console.log(`Попытка ${attempt}: Бобы какао не экипированы`);
+                    if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 100));
+                }
+            } catch (equipError) {
+                console.log(`Ошибка при экипировке бобов (попытка ${attempt}):`, equipError.message);
+                if (attempt < 3) await new Promise(resolve => setTimeout(resolve, 100));
+            }
+        }
+        
+        if (!equipSuccess) {
+            console.log('Не удалось экипировать бобы какао');
+            return false;
+        }
+
+
+        try {
+            const plantPromise = bot.placeBlock(log, new Vec3(1, 0, 0)); // Сажаем справа от дерева
+            const timeoutPromise = new Promise((_, reject) => 
+                setTimeout(() => reject(new Error('Таймаут посадки')), 1)
+            );
+            
+            await Promise.race([plantPromise, timeoutPromise]);
+            console.log('Какао успешно посажено на координатах:', x, y, z);
+            
+        } catch (plantError) {
+            console.log('Ошибка при посадке какао:', plantError.message);
+            return false;
+        }
+        
+ 
+        if (held) {
+            try {
+                await bot.equip(held, 'hand');
+                await new Promise(resolve => setTimeout(resolve, 200));
+            } catch (returnError) {
+                console.log('Ошибка при возврате предмета в руку:', returnError.message);
+            }
+        }
+        
+        return true;
+    } catch (error) {
+        console.log('Ошибка при улучшенной посадке какао:', error.message);
+        return false;
+    }
+}
